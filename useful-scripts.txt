@@ -1,0 +1,56 @@
+#Filtered Query for getting _id and text
+
+curl -o ~/Downloads/russian-onions.json -u memex:MemexHS2014 -k -XGET 'https://memex1.csl.sri.com/elasticsearch/onions/russian/_search?size=10' -d '
+{
+"_source":["text"],["url"],        
+"query":{ "match_all":{}}
+}'
+
+
+curl -o ~/Downloads/russian-onions-300k-new.json -u memex:MemexHS2014 -k -XGET 'https://memex1.csl.sri.com/elasticsearch/onions/russian/_search?size=300000' -d '
+{
+"_source":["text"],["url"],        
+"query":{ "match_all":{}}
+}'
+
+
+##scan and scroll api
+es = Elasticsearch(['https://memex:MemexHS2014@memex1.csl.sri.com/elasticsearch/'])
+python scan_and_scroll_v2.py onions russian '{\"query\" : {\"match_all\" : {}}}' 
+python scan_and_scroll_v2.py onions russian '{"fields":["_id"],"_source":["text"],"query":{ "match_all":{}}}'
+
+
+
+./bin/spark-submit --master local[*] --executor-memory=12g --driver-memory=12g --py-files ~/Desktop/github_repos/dig-lsh-clustering/tokenizer/tokenizer.zip ~/Desktop/github_repos/dig-lsh-clustering/tokenizer/tokenizer.py ~/Desktop/github_repos/Russian_Onions/latin/russian-onions-100k-latin.csv ~/Desktop/github_repos/Russian_Onions/onions-config.json ~/Desktop/github_repos/Russian_Onions/latin/russian-onions-tokens-100k.csv
+
+
+
+with base:
+./bin/spark-submit --master local[*] --executor-memory=12g --driver-memory=12g --py-files ~/Desktop/github_repos/dig-lsh-clustering/lsh.zip ~/Desktop/github_repos/dig-lsh-clustering/runLSH.py --numPartitions 100 --base ~/Desktop/github_repos/Russian_Onions/latin/openwebdocs-latin.csv --baseConfig ~/Desktop/github_repos/Russian_Onions/onions-config.json --numHashes 50 --numItemsInBand 5 --computeSimilarity ~/Desktop/github_repos/Russian_Onions/latin/russian-onions-100k-latin.csv ~/Desktop/github_repos/Russian_Onions/onions-config.json ~/Desktop/github_repos/Russian_Onions/clusters/100k-50-5
+
+
+Tokenization - step1 for openweb:
+./bin/spark-submit --master local[*] --executor-memory=12g --driver-memory=12g --py-files ~/Desktop/github_repos/dig-lsh-clustering/tokenizer/tokenizer.zip ~/Desktop/github_repos/dig-lsh-clustering/tokenizer/tokenizer.py ~/Desktop/github_repos/Russian_Onions/latin/openwebdocs-latin.csv ~/Desktop/github_repos/Russian_Onions/onions-config.json ~/Desktop/github_repos/Russian_Onions/tokens/openweb-tokens.tsv
+
+Tokenization - step1 for darkweb
+./bin/spark-submit --master local[*] --executor-memory=12g --driver-memory=12g --py-files ~/Desktop/github_repos/dig-lsh-clustering/tokenizer/tokenizer.zip ~/Desktop/github_repos/dig-lsh-clustering/tokenizer/tokenizer.py ~/Desktop/github_repos/Russian_Onions/latin/russian-onions-100k-latin.csv ~/Desktop/github_repos/Russian_Onions/onions-config.json ~/Desktop/github_repos/Russian_Onions/tokens/russian-onions-100k.tsv
+
+
+ComputeLSH for openweb
+./bin/spark-submit --master local[*] --executor-memory=12g --driver-memory=12g --py-files ~/Desktop/github_repos/dig-lsh-clustering/hasher/hasher.zip ~/Desktop/github_repos/dig-lsh-clustering/hasher/hasher.py --saveMinhashes --numHashes 50 --numItemsInBand 5 ~/Desktop/github_repos/Russian_Onions/tokens/openweb-tokens.tsv/ ~/Desktop/github_repos/Russian_Onions/hashes/openwebhashes
+
+ComputeLSH for darkweb:
+./bin/spark-submit --master local[*] --executor-memory=12g --driver-memory=12g --py-files ~/Desktop/github_repos/dig-lsh-clustering/hasher/hasher.zip ~/Desktop/github_repos/dig-lsh-clustering/hasher/hasher.py --saveMinhashes --numHashes 50 --numItemsInBand 5 ~/Desktop/github_repos/Russian_Onions/tokens/russian-onions-100k.csv/ ~/Desktop/github_repos/Russian_Onions/hashes/russian-onions-50-5-6grams/
+
+Final clustering
+./bin/spark-submit --master local[*] --executor-memory=12g --driver-memory=12g ~/Desktop/github_repos/dig-lsh-clustering/clusterer/clusterer.py --base ~/Desktop/github_repos/Russian_Onions/hashes/russian-onions-50-5-6grams/ --computeSimilarity ~/Desktop/github_repos/Russian_Onions/hashes/openwebhashes/ ~/Desktop/github_repos/Russian_Onions/clusters/100k-50-5
+
+
+ mvn archetype:generate -DgroupId=com.deduplication -DartifactId=DeduplicatPosts -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+
+
+
+
+
+
+
