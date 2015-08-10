@@ -2,16 +2,14 @@
 
 curl -o ~/Downloads/russian-onions.json -u memex:MemexHS2014 -k -XGET 'https://memex1.csl.sri.com/elasticsearch/onions/russian/_search?size=10' -d '
 {
-"fields":["_id"],
-"_source":["text"],        
+"_source":["text"],["url"],        
 "query":{ "match_all":{}}
 }'
 
 
 curl -o ~/Downloads/russian-onions-300k-new.json -u memex:MemexHS2014 -k -XGET 'https://memex1.csl.sri.com/elasticsearch/onions/russian/_search?size=300000' -d '
 {
-"fields":["_id"],
-"_source":["text"],        
+"_source":["text"],["url"],        
 "query":{ "match_all":{}}
 }'
 
@@ -19,11 +17,7 @@ curl -o ~/Downloads/russian-onions-300k-new.json -u memex:MemexHS2014 -k -XGET '
 ##scan and scroll api
 es = Elasticsearch(['https://memex:MemexHS2014@memex1.csl.sri.com/elasticsearch/'])
 python scan_and_scroll_v2.py onions russian '{\"query\" : {\"match_all\" : {}}}' 
-python scan_and_scroll_v2.py onions russian '{
-"fields":["_id"],
-"_source":["text"],        
-"query":{ "match_all":{}}
-}'
+python scan_and_scroll_v2.py onions russian '{"fields":["_id"],"_source":["text"],"query":{ "match_all":{}}}'
 
 
 
@@ -52,7 +46,7 @@ Final clustering
 ./bin/spark-submit --master local[*] --executor-memory=12g --driver-memory=12g ~/Desktop/github_repos/dig-lsh-clustering/clusterer/clusterer.py --base ~/Desktop/github_repos/Russian_Onions/hashes/russian-onions-50-5-6grams/ --computeSimilarity ~/Desktop/github_repos/Russian_Onions/hashes/openwebhashes/ ~/Desktop/github_repos/Russian_Onions/clusters/100k-50-5
 
 
-
+ mvn archetype:generate -DgroupId=com.deduplication -DartifactId=DeduplicatPosts -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
 
 
