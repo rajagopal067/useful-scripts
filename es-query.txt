@@ -17,7 +17,7 @@ curl -o ~/Downloads/russian-onions-300k-new.json -u memex:MemexHS2014 -k -XGET '
 ##scan and scroll api
 es = Elasticsearch(['https://memex:MemexHS2014@memex1.csl.sri.com/elasticsearch/'])
 python scan_and_scroll_v2.py onions russian '{\"query\" : {\"match_all\" : {}}}' 
-python scan_and_scroll_v2.py onions russian '{"fields":["_id"],"_source":["text"],"query":{ "match_all":{}}}'
+python scan_and_scroll_v2.py onions russian '{"_source":["text","url"],"query":{ "match_all":{}}}'
 
 
 
